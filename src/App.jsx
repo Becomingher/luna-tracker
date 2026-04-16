@@ -154,15 +154,22 @@ export default function CycleTracker() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try { setPeriods(JSON.parse(saved)); } catch {}
+    async function load() {
+      try {
+        const result = await window.storage.get(STORAGE_KEY, true);
+        if (result?.value) setPeriods(JSON.parse(result.value));
+      } catch {}
+      setLoaded(true);
     }
-    setLoaded(true);
+    load();
   }, []);
 
   useEffect(() => {
-    if (loaded) localStorage.setItem(STORAGE_KEY, JSON.stringify(periods));
+    if (!loaded) return;
+    async function save() {
+      try { await window.storage.set(STORAGE_KEY, JSON.stringify(periods), true); } catch {}
+    }
+    save();
   }, [periods, loaded]);
 
   const prediction = predictCycles(periods);
